@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "ts-node-dev -r tsconfig-paths/register --inspect --transpile-only --ignore-watch node_modules src/server.ts",
     "lint": "eslint . --ext .ts",
-    "lint-fix": "eslint . --ext .ts --fix"
+    "lint-fix": "eslint . --ext .ts --fix",
+    "test": "jest",
+    "test-watch": "jest --watchAll",
+    "test-cove": "jest --coverage"
   },
   "keywords": [],
   "author": "",

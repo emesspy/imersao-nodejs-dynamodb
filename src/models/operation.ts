@@ -1,6 +1,6 @@
 export interface Operation {
   type: OperationType;
-  docuemnt: string;
+  document: string;
   balance?: number;
   amount?: number;
   transaction?: Transaction;

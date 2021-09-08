@@ -1,4 +1,4 @@
-import * as inputData from '../input.json';
+import inputData from './input/input.json';
 import Account from './models/Account';
 import * as accountManagement from './service/accountManagement';
 
@@ -7,7 +7,7 @@ console.log(inputData);
 
 const result = [];
 
-inputData.default.forEach(item => {
+inputData.forEach(item => {
   switch (item.type) {
     case 'CREATE_ACCOUNT': {
       let message: string;
