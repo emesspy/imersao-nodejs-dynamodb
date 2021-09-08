@@ -7,47 +7,53 @@ import AccountManagerImpl from '../../application/AccountManagerImpl';
 
 const accountManager: AccountManager = new AccountManagerImpl();
 
-for (const command of inputData) {
-  switch (command.type) {
+for (const operation of inputData) {
+  switch (operation.type) {
     case OperationType.CREATE_ACCOUNT: {
       try {
-        const document = getDocument(<Operation>command);
-        const balance = getBalance(<Operation>command);
+        const document = getDocument(<Operation>operation);
+        const balance = getBalance(<Operation>operation);
         const account: Account = accountManager.createAccount(
           document,
           balance,
         );
-        console.log(`${JSON.stringify(command)} => ${JSON.stringify(account)}`);
+        console.log(
+          `${JSON.stringify(operation)} => ${JSON.stringify(account)}`,
+        );
       } catch (e) {
-        console.log(`${JSON.stringify(command)} => ${(<Error>e).message}`);
+        console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
       }
       break;
     }
     case OperationType.DEPOSIT: {
       try {
-        const document = getDocument(<Operation>command);
-        const amount = getAmount(<Operation>command);
+        const document = getDocument(<Operation>operation);
+        const amount = getAmount(<Operation>operation);
         const account: Account = accountManager.makeDeposit(document, amount);
-        console.log(`${JSON.stringify(command)} => ${JSON.stringify(account)}`);
+        console.log(
+          `${JSON.stringify(operation)} => ${JSON.stringify(account)}`,
+        );
       } catch (e) {
-        console.log(`${JSON.stringify(command)} => ${(<Error>e).message}`);
+        console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
       }
       break;
     }
     case OperationType.WITHDRAW: {
       try {
-        const document = getDocument(<Operation>command);
-        const amount = getAmount(<Operation>command);
+        const document = getDocument(<Operation>operation);
+        const amount = getAmount(<Operation>operation);
         const account: Account = accountManager.makeWithdraw(document, amount);
-        console.log(`${JSON.stringify(command)} => ${JSON.stringify(account)}`);
+        console.log(
+          `${JSON.stringify(operation)} => ${JSON.stringify(account)}`,
+        );
       } catch (e) {
-        console.log(`${JSON.stringify(command)} => ${(<Error>e).message}`);
+        console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
       }
       break;
     }
     case OperationType.TRANSFER: {
       try {
-        const transaction: Transaction = getTransaction(<Operation>command);
+        const transaction: Transaction = getTransaction(<Operation>operation);
         const accounts = accountManager.transfer(
           transaction.id,
           transaction.payer,
@@ -55,31 +61,33 @@ for (const command of inputData) {
           transaction.amount,
         );
         console.log(
-          `${JSON.stringify(command)} => ${JSON.stringify(accounts)}`,
+          `${JSON.stringify(operation)} => ${JSON.stringify(accounts)}`,
         );
       } catch (e) {
-        console.log(`${JSON.stringify(command)} => ${(<Error>e).message}`);
+        console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
       }
       break;
     }
     case OperationType.EXTRACT: {
       try {
-        const document = getDocument(<Operation>command);
+        const document = getDocument(<Operation>operation);
         const extract: AccountTransaction[] =
           accountManager.getExtract(document);
-        console.log(`${JSON.stringify(command)} => ${JSON.stringify(extract)}`);
+        console.log(
+          `${JSON.stringify(operation)} => ${JSON.stringify(extract)}`,
+        );
       } catch (e) {
-        console.log(`${JSON.stringify(command)} => ${(<Error>e).message}`);
+        console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
       }
       break;
     }
     case OperationType.BALANCE: {
       try {
-        const document = getDocument(<Operation>command);
+        const document = getDocument(<Operation>operation);
         const balance: number = accountManager.getBalance(document);
-        console.log(`${JSON.stringify(command)} => ${balance}`);
+        console.log(`${JSON.stringify(operation)} => ${balance}`);
       } catch (e) {
-        console.log(`${JSON.stringify(command)} => ${(<Error>e).message}`);
+        console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
       }
     }
   }
