@@ -9,7 +9,7 @@ import AccountRepository from './port/out/AccountRepository';
 class AccountManagerImpl implements AccountManager {
   private repository: AccountRepository;
 
-  constructor(repository: AccountRepository = AccountRepositoryImpl) {
+  constructor(repository: AccountRepository = new AccountRepositoryImpl()) {
     this.repository = repository;
   }
 
@@ -34,7 +34,7 @@ class AccountManagerImpl implements AccountManager {
     const contaExistente: Account = this.repository.findAccountValid(document);
 
     if (contaExistente.balance - amount < 0) {
-      throw new Error(`saldo insuficiente para saque. document:${document}`);
+      throw new Error(`saldo insuficiente para saque. document=${document}`);
     }
 
     const withdraw = new AccountTransaction(
@@ -60,7 +60,7 @@ class AccountManagerImpl implements AccountManager {
     const contaRecebedora: Account = this.repository.findAccountValid(receiver);
 
     if (contaPagadora.balance - amount < 0) {
-      throw new Error(`saldo insuficiente para transferir. document:${payer}`);
+      throw new Error(`saldo insuficiente para transferir. document=${payer}`);
     }
 
     const transferencia = new AccountTransaction(
@@ -71,10 +71,10 @@ class AccountManagerImpl implements AccountManager {
       receiver,
     );
     contaPagadora.doTransaction(-amount, transferencia);
-    this.repository.updateAccount(contaPagadora);
+    const contaPagadoraSalva = this.repository.updateAccount(contaPagadora);
     contaRecebedora.doTransaction(amount, transferencia);
-    this.repository.updateAccount(contaRecebedora);
-    return [contaPagadora, contaRecebedora];
+    const contaRecebedoraSalva = this.repository.updateAccount(contaRecebedora);
+    return [contaPagadoraSalva, contaRecebedoraSalva];
   }
 
   getExtract(document: string): AccountTransaction[] {

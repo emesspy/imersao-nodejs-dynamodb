@@ -20,11 +20,6 @@ class AccountTransaction {
     this.amount = amount;
     this.type = type;
   }
-
-  public toString = (): string => {
-    return `AccountTransaction{ id: ${this.id}, amount: ${this.amount}, type: ${this.type}, payer: ${this.payer}, receiver: ${this.receiver}}
-    `;
-  };
 }
 
 export default AccountTransaction;

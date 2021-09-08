@@ -41,4 +41,4 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 }
 
-export default new AccountRepositoryImpl();
+export default AccountRepositoryImpl;
