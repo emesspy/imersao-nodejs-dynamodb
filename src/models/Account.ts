@@ -1,16 +1,16 @@
 import { v4 as uuidv4 } from 'uuid';
-import Transaction from './Transaction';
+import AccountTransaction from './AccountTransaction';
 import TransactionType from './TransactionType';
 
 class Account {
   public readonly document: string;
   public balance: number;
-  public extract: Transaction[];
+  public extract: AccountTransaction[];
 
   private initExtract(balance: number) {
     if (balance > 0) {
       this.extract.push(
-        new Transaction(uuidv4(), balance, TransactionType.DEPOSIT),
+        new AccountTransaction(uuidv4(), balance, TransactionType.DEPOSIT),
       );
     }
   }
@@ -22,7 +22,7 @@ class Account {
     this.initExtract(balance);
   }
 
-  doTransaction(amount: number, transaction: Transaction): void {
+  doTransaction(amount: number, transaction: AccountTransaction): void {
     this.balance += amount;
     this.extract.push(transaction);
   }

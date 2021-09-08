@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import Account from '../models/Account';
-import Transaction from '../models/Transaction';
+import AccountTransaction from '../models/AccountTransaction';
 import TransactionType from '../models/TransactionType';
 
 function findAccount(
@@ -40,7 +40,11 @@ export function makeDeposit(
 ): void {
   const contaExistente: Account = findAccountValid(contas, document);
 
-  const deposit = new Transaction(uuidv4(), amount, TransactionType.DEPOSIT);
+  const deposit = new AccountTransaction(
+    uuidv4(),
+    amount,
+    TransactionType.DEPOSIT,
+  );
   contaExistente.doTransaction(amount, deposit);
 }
 
@@ -55,7 +59,11 @@ export function makeWithdraw(
     throw new Error('saldo insuficiente');
   }
 
-  const withdraw = new Transaction(uuidv4(), amount, TransactionType.WITHDRAW);
+  const withdraw = new AccountTransaction(
+    uuidv4(),
+    amount,
+    TransactionType.WITHDRAW,
+  );
   contaExistente.doTransaction(-amount, withdraw);
 }
 
@@ -77,7 +85,7 @@ export function transfer(
     throw new Error('saldo insuficiente para transferir');
   }
 
-  const transferencia = new Transaction(
+  const transferencia = new AccountTransaction(
     id,
     amount,
     TransactionType.TRANSFER,
@@ -91,7 +99,7 @@ export function transfer(
 export function getExtract(
   contas: Map<string, Account>,
   document: string,
-): Transaction[] {
+): AccountTransaction[] {
   const contaExistente: Account = findAccountValid(contas, document);
 
   return contaExistente.extract;

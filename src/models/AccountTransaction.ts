@@ -1,6 +1,6 @@
 import TransactionType from './TransactionType';
 
-class Transaction {
+class AccountTransaction {
   public readonly id: string;
   public readonly payer?: string;
   public readonly receiver?: string;
@@ -22,9 +22,9 @@ class Transaction {
   }
 
   public toString = (): string => {
-    return `Transaction{ id: ${this.id}, amount: ${this.amount}, type: ${this.type}, payer: ${this.payer}, receiver: ${this.receiver}}
+    return `AccountTransaction{ id: ${this.id}, amount: ${this.amount}, type: ${this.type}, payer: ${this.payer}, receiver: ${this.receiver}}
     `;
   };
 }
 
-export default Transaction;
+export default AccountTransaction;
