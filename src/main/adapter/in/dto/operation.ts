@@ -1,4 +1,5 @@
 export interface Operation {
+  organization: string;
   type: OperationType;
   document?: string;
   balance?: number;

@@ -2,15 +2,33 @@ import Account from '../../../domain/Account';
 import AccountTransaction from '../../../domain/AccountTransaction';
 
 export default interface AccountManager {
-  createAccount(document: string, balance: number): Promise<Account>;
-  makeDeposit(document: string, amount: number): Promise<Account>;
-  makeWithdraw(document: string, amount: number): Promise<Account>;
+  createAccount(
+    tenant: string,
+    document: string,
+    balance: number,
+  ): Promise<Account>;
+
+  makeDeposit(
+    tenant: string,
+    document: string,
+    amount: number,
+  ): Promise<Account>;
+
+  makeWithdraw(
+    tenant: string,
+    document: string,
+    amount: number,
+  ): Promise<Account>;
+
   transfer(
+    tenant: string,
     id: string,
     payer: string,
     receiver: string,
     amount: number,
   ): Promise<[Account, Account]>;
-  getExtract(document: string): Promise<AccountTransaction[]>;
-  getBalance(document: string): Promise<number>;
+
+  getExtract(tenant: string, document: string): Promise<AccountTransaction[]>;
+
+  getBalance(tenant: string, document: string): Promise<number>;
 }

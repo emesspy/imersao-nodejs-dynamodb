@@ -15,7 +15,6 @@ import { SingleTableModel } from './dto/SingleTableModel';
 import TransactionType from '../../domain/TransactionType';
 
 const TABLE_NAME = 'BankManager';
-const tenant = 'teste';
 
 AWS.config.update({
   accessKeyId: '5lj26r',
@@ -81,26 +80,33 @@ class AccountRepositoryImpl implements AccountRepository {
       .promise();
   }
 
-  async findAccount(document: string): Promise<Account | undefined> {
+  async findAccount(
+    tenant: string,
+    document: string,
+  ): Promise<Account | undefined> {
     const pk = `${tenant}#${ACCOUNT_ENTITY_NAME}#${document}`;
     const sk = `${ACCOUNT_ENTITY_NAME}#${document}`;
     const result = await this.getByPartitionKeyAndSortKey(pk, sk);
     if (result && result.balance !== undefined) {
       return new Account(
+        tenant,
         result.sk.split(`${ACCOUNT_ENTITY_NAME}#`)[1],
         result.balance,
       );
     }
   }
 
-  async findAccountValid(document: string): Promise<Account> {
+  async findAccountValid(tenant: string, document: string): Promise<Account> {
     const pk = `${tenant}#${ACCOUNT_ENTITY_NAME}#${document}`;
     const sk = `${ACCOUNT_ENTITY_NAME}#${document}`;
     const result = await this.getByPartitionKeyAndSortKey(pk, sk);
     if (!result || result.balance === undefined) {
-      throw new Error(`conta inexistente. document=${document}`);
+      throw new Error(
+        `conta inexistente. tenant=${tenant} , document=${document}`,
+      );
     }
     return new Account(
+      tenant,
       result.sk.split(`${ACCOUNT_ENTITY_NAME}#`)[1],
       result.balance,
     );
@@ -108,7 +114,7 @@ class AccountRepositoryImpl implements AccountRepository {
 
   async createAccount(account: Account): Promise<Account> {
     this.putItem({
-      pk: `${tenant}#${ACCOUNT_ENTITY_NAME}#${account.document}`,
+      pk: `${account.tenant}#${ACCOUNT_ENTITY_NAME}#${account.document}`,
       sk: `${ACCOUNT_ENTITY_NAME}#${account.document}`,
       balance: account.balance,
     });
@@ -116,17 +122,17 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   async updateAccount(account: Account): Promise<Account> {
-    const result = await this.findAccount(account.document);
+    const result = await this.findAccount(account.tenant, account.document);
     if (!result || result.balance === undefined) {
       throw new Error(
-        `nao foi possivel editar, conta inexistente. document=${account.document}`,
+        `nao foi possivel editar, conta inexistente. tenant=${account.tenant} , document=${account.document}`,
       );
     }
     await this.docClient
       .update({
         TableName: TABLE_NAME,
         Key: {
-          pk: `${tenant}#${ACCOUNT_ENTITY_NAME}#${account.document}`,
+          pk: `${account.tenant}#${ACCOUNT_ENTITY_NAME}#${account.document}`,
           sk: `${ACCOUNT_ENTITY_NAME}#${account.document}`,
         },
         UpdateExpression: 'set balance = :balance',
@@ -144,17 +150,24 @@ class AccountRepositoryImpl implements AccountRepository {
     const payer = transaction.payer;
     const receiver = transaction.receiver;
     if (payer) {
-      this.putItem(this.createTransactionInputItem(tenant, payer, transaction));
+      this.putItem(
+        this.createTransactionInputItem(transaction.tenant, payer, transaction),
+      );
     }
     if (receiver) {
       this.putItem(
-        this.createTransactionInputItem(tenant, receiver, transaction),
+        this.createTransactionInputItem(
+          transaction.tenant,
+          receiver,
+          transaction,
+        ),
       );
     }
     return transaction;
   }
 
   async findAccountTransactions(
+    tenant: string,
     document: string,
   ): Promise<AccountTransaction[]> {
     const pk = `${tenant}#${ACCOUNT_ENTITY_NAME}#${document}`;
@@ -167,6 +180,7 @@ class AccountRepositoryImpl implements AccountRepository {
         })
         .map(transaction => {
           return new AccountTransaction(
+            tenant,
             transaction.sk.split(`${ACCOUNT_TRANSACTION_ENTITY_NAME}#`)[1],
             transaction.amount!,
             transaction.type! as TransactionType,

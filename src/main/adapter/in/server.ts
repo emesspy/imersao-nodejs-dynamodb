@@ -1,4 +1,4 @@
-import inputData from '../../../input/input.json';
+import inputData from '../../../input/input_with_tenant.json';
 import { Operation, OperationType, Transaction } from './dto/operation';
 import AccountManager from '../../application/port/in/AccountManager';
 import AccountManagerImpl from '../../application/AccountManagerImpl';
@@ -19,7 +19,7 @@ async function executeOperation(operation: Operation): Promise<void> {
       const document = getDocument(operation);
       const balance = getBalance(operation);
       await accountManager
-        .createAccount(document, balance)
+        .createAccount(operation.organization, document, balance)
         .then(account =>
           console.log(
             `${JSON.stringify(operation)} => ${JSON.stringify(account)}`,
@@ -34,7 +34,7 @@ async function executeOperation(operation: Operation): Promise<void> {
       const document = getDocument(<Operation>operation);
       const amount = getAmount(<Operation>operation);
       await accountManager
-        .makeDeposit(document, amount)
+        .makeDeposit(operation.organization, document, amount)
         .then(account =>
           console.log(
             `${JSON.stringify(operation)} => ${JSON.stringify(account)}`,
@@ -49,7 +49,7 @@ async function executeOperation(operation: Operation): Promise<void> {
       const document = getDocument(<Operation>operation);
       const amount = getAmount(<Operation>operation);
       await accountManager
-        .makeWithdraw(document, amount)
+        .makeWithdraw(operation.organization, document, amount)
         .then(account =>
           console.log(
             `${JSON.stringify(operation)} => ${JSON.stringify(account)}`,
@@ -64,6 +64,7 @@ async function executeOperation(operation: Operation): Promise<void> {
       const transaction: Transaction = getTransaction(<Operation>operation);
       await accountManager
         .transfer(
+          operation.organization,
           transaction.id,
           transaction.payer,
           transaction.receiver,
@@ -82,7 +83,7 @@ async function executeOperation(operation: Operation): Promise<void> {
     case OperationType.EXTRACT: {
       const document = getDocument(<Operation>operation);
       await accountManager
-        .getExtract(document)
+        .getExtract(operation.organization, document)
         .then(extract =>
           console.log(
             `${JSON.stringify(operation)} => ${JSON.stringify(extract)}`,
@@ -96,7 +97,7 @@ async function executeOperation(operation: Operation): Promise<void> {
     case OperationType.BALANCE: {
       const document = getDocument(<Operation>operation);
       await accountManager
-        .getBalance(document)
+        .getBalance(operation.organization, document)
         .then(balance =>
           console.log(
             `${JSON.stringify(operation)} => ${JSON.stringify(balance)}`,
