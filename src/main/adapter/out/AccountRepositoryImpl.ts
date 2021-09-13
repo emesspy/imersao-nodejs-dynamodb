@@ -31,7 +31,7 @@ class AccountRepositoryImpl implements AccountRepository {
     });
   }
 
-  private async getByPartitionKeyAndSortKey(
+  async getByPartitionKeyAndSortKey(
     pk: string,
     sk: string,
   ): Promise<SingleTableModel | undefined> {
@@ -49,7 +49,27 @@ class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
-  private async getByPartitionKeyAndQuerySortKey(
+  async updateBalanceByPartitionKeyAndSortKey(
+    pk: string,
+    sk: string,
+    balance: number,
+  ): Promise<void> {
+    await this.docClient
+      .update({
+        TableName: TABLE_NAME,
+        Key: {
+          pk: pk,
+          sk: sk,
+        },
+        UpdateExpression: 'set balance = :balance',
+        ExpressionAttributeValues: {
+          ':balance': balance,
+        },
+      } as UpdateItemInput)
+      .promise();
+  }
+
+  async getByPartitionKeyAndQuerySortKey(
     pk: string,
     sk: string,
   ): Promise<SingleTableModel[]> {
@@ -69,7 +89,7 @@ class AccountRepositoryImpl implements AccountRepository {
     return result.Items.map(item => item as SingleTableModel);
   }
 
-  private async putItem(item: SingleTableModel): Promise<void> {
+  async putItem(item: SingleTableModel): Promise<void> {
     await this.docClient
       .put({
         TableName: TABLE_NAME,
@@ -128,19 +148,11 @@ class AccountRepositoryImpl implements AccountRepository {
         `nao foi possivel editar, conta inexistente. tenant=${account.tenant} , document=${account.document}`,
       );
     }
-    await this.docClient
-      .update({
-        TableName: TABLE_NAME,
-        Key: {
-          pk: `${account.tenant}#${ACCOUNT_ENTITY_NAME}#${account.document}`,
-          sk: `${ACCOUNT_ENTITY_NAME}#${account.document}`,
-        },
-        UpdateExpression: 'set balance = :balance',
-        ExpressionAttributeValues: {
-          ':balance': account.balance,
-        },
-      } as UpdateItemInput)
-      .promise();
+    this.updateBalanceByPartitionKeyAndSortKey(
+      `${account.tenant}#${ACCOUNT_ENTITY_NAME}#${account.document}`,
+      `${ACCOUNT_ENTITY_NAME}#${account.document}`,
+      account.balance,
+    );
     return account;
   }
 
