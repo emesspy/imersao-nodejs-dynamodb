@@ -22,4 +22,6 @@ class AccountTransaction {
   }
 }
 
+export const ACCOUNT_TRANSACTION_ENTITY_NAME = 'TRANSACTION';
+
 export default AccountTransaction;

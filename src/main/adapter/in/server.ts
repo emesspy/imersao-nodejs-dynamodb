@@ -1,94 +1,110 @@
 import inputData from '../../../input/input.json';
 import { Operation, OperationType, Transaction } from './dto/operation';
-import Account from '../../domain/Account';
-import AccountTransaction from '../../domain/AccountTransaction';
 import AccountManager from '../../application/port/in/AccountManager';
 import AccountManagerImpl from '../../application/AccountManagerImpl';
 
 const accountManager: AccountManager = new AccountManagerImpl();
 
-for (const operation of inputData) {
+readOperations();
+
+async function readOperations(): Promise<void> {
+  for await (const operation of inputData) {
+    await executeOperation(operation as Operation);
+  }
+}
+
+async function executeOperation(operation: Operation): Promise<void> {
   switch (operation.type) {
     case OperationType.CREATE_ACCOUNT: {
-      try {
-        const document = getDocument(<Operation>operation);
-        const balance = getBalance(<Operation>operation);
-        const account: Account = accountManager.createAccount(
-          document,
-          balance,
-        );
-        console.log(
-          `${JSON.stringify(operation)} => ${JSON.stringify(account)}`,
-        );
-      } catch (e) {
-        console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
-      }
+      const document = getDocument(operation);
+      const balance = getBalance(operation);
+      await accountManager
+        .createAccount(document, balance)
+        .then(account =>
+          console.log(
+            `${JSON.stringify(operation)} => ${JSON.stringify(account)}`,
+          ),
+        )
+        .catch(e => {
+          console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
+        });
       break;
     }
     case OperationType.DEPOSIT: {
-      try {
-        const document = getDocument(<Operation>operation);
-        const amount = getAmount(<Operation>operation);
-        const account: Account = accountManager.makeDeposit(document, amount);
-        console.log(
-          `${JSON.stringify(operation)} => ${JSON.stringify(account)}`,
-        );
-      } catch (e) {
-        console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
-      }
+      const document = getDocument(<Operation>operation);
+      const amount = getAmount(<Operation>operation);
+      await accountManager
+        .makeDeposit(document, amount)
+        .then(account =>
+          console.log(
+            `${JSON.stringify(operation)} => ${JSON.stringify(account)}`,
+          ),
+        )
+        .catch(e => {
+          console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
+        });
       break;
     }
     case OperationType.WITHDRAW: {
-      try {
-        const document = getDocument(<Operation>operation);
-        const amount = getAmount(<Operation>operation);
-        const account: Account = accountManager.makeWithdraw(document, amount);
-        console.log(
-          `${JSON.stringify(operation)} => ${JSON.stringify(account)}`,
-        );
-      } catch (e) {
-        console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
-      }
+      const document = getDocument(<Operation>operation);
+      const amount = getAmount(<Operation>operation);
+      await accountManager
+        .makeWithdraw(document, amount)
+        .then(account =>
+          console.log(
+            `${JSON.stringify(operation)} => ${JSON.stringify(account)}`,
+          ),
+        )
+        .catch(e => {
+          console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
+        });
       break;
     }
     case OperationType.TRANSFER: {
-      try {
-        const transaction: Transaction = getTransaction(<Operation>operation);
-        const accounts = accountManager.transfer(
+      const transaction: Transaction = getTransaction(<Operation>operation);
+      await accountManager
+        .transfer(
           transaction.id,
           transaction.payer,
           transaction.receiver,
           transaction.amount,
-        );
-        console.log(
-          `${JSON.stringify(operation)} => ${JSON.stringify(accounts)}`,
-        );
-      } catch (e) {
-        console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
-      }
+        )
+        .then(accounts =>
+          console.log(
+            `${JSON.stringify(operation)} => ${JSON.stringify(accounts)}`,
+          ),
+        )
+        .catch(e => {
+          console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
+        });
       break;
     }
     case OperationType.EXTRACT: {
-      try {
-        const document = getDocument(<Operation>operation);
-        const extract: AccountTransaction[] =
-          accountManager.getExtract(document);
-        console.log(
-          `${JSON.stringify(operation)} => ${JSON.stringify(extract)}`,
-        );
-      } catch (e) {
-        console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
-      }
+      const document = getDocument(<Operation>operation);
+      await accountManager
+        .getExtract(document)
+        .then(extract =>
+          console.log(
+            `${JSON.stringify(operation)} => ${JSON.stringify(extract)}`,
+          ),
+        )
+        .catch(e => {
+          console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
+        });
       break;
     }
     case OperationType.BALANCE: {
-      try {
-        const document = getDocument(<Operation>operation);
-        const balance: number = accountManager.getBalance(document);
-        console.log(`${JSON.stringify(operation)} => ${balance}`);
-      } catch (e) {
-        console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
-      }
+      const document = getDocument(<Operation>operation);
+      await accountManager
+        .getBalance(document)
+        .then(balance =>
+          console.log(
+            `${JSON.stringify(operation)} => ${JSON.stringify(balance)}`,
+          ),
+        )
+        .catch(e => {
+          console.log(`${JSON.stringify(operation)} => ${(<Error>e).message}`);
+        });
     }
   }
 }

@@ -6,6 +6,19 @@ import TransactionType from '../domain/TransactionType';
 import AccountManager from './port/in/AccountManager';
 import AccountRepository from './port/out/AccountRepository';
 
+function createDepositTransaction(
+  amount: number,
+  receiver: string,
+): AccountTransaction {
+  return new AccountTransaction(
+    uuidv4(),
+    amount,
+    TransactionType.DEPOSIT,
+    undefined,
+    receiver,
+  );
+}
+
 class AccountManagerImpl implements AccountManager {
   private repository: AccountRepository;
 
@@ -13,55 +26,89 @@ class AccountManagerImpl implements AccountManager {
     this.repository = repository;
   }
 
-  createAccount(document: string, balance: number): Account {
+  async createAccount(document: string, balance: number): Promise<Account> {
     const account = new Account(document, balance);
-    return this.repository.createAccount(account);
+    const result = await this.repository.findAccount(account.document);
+    if (result) {
+      throw new Error(`conta ja existe. document=${account.document}`);
+    }
+    const initialDeposit = createDepositTransaction(balance, document);
+    const resultAccount = await this.repository.createAccount(account);
+    await this.repository.createAccountTransaction(initialDeposit);
+    return resultAccount;
   }
 
-  makeDeposit(document: string, amount: number): Account {
-    const contaExistente: Account = this.repository.findAccountValid(document);
-
-    const deposit = new AccountTransaction(
-      uuidv4(),
-      amount,
-      TransactionType.DEPOSIT,
+  async makeDeposit(document: string, amount: number): Promise<Account> {
+    if (amount < 1) {
+      throw new Error(
+        `valor do deposito precisa ser positivo. document:${document}, amount:${amount}`,
+      );
+    }
+    const contaExistente: Account = await this.repository.findAccountValid(
+      document,
     );
-    contaExistente.doTransaction(amount, deposit);
-    return this.repository.updateAccount(contaExistente);
+    contaExistente.balance += amount;
+
+    const deposit = createDepositTransaction(amount, document);
+    await this.repository.createAccountTransaction(deposit);
+    return await this.repository.updateAccount(contaExistente);
   }
 
-  makeWithdraw(document: string, amount: number): Account {
-    const contaExistente: Account = this.repository.findAccountValid(document);
+  async makeWithdraw(document: string, amount: number): Promise<Account> {
+    if (amount < 1) {
+      throw new Error(
+        `valor do saque precisa ser positivo. document:${document}, amount:${amount}`,
+      );
+    }
+    const contaExistente: Account = await this.repository.findAccountValid(
+      document,
+    );
 
     if (contaExistente.balance - amount < 0) {
-      throw new Error(`saldo insuficiente para saque. document=${document}`);
+      throw new Error(
+        `saldo insuficiente para saque. document=${document}, amount:${amount}`,
+      );
     }
+    contaExistente.balance -= amount;
 
     const withdraw = new AccountTransaction(
       uuidv4(),
       amount,
       TransactionType.WITHDRAW,
+      document,
     );
-    contaExistente.doTransaction(-amount, withdraw);
-    return this.repository.updateAccount(contaExistente);
+    await this.repository.createAccountTransaction(withdraw);
+    return await this.repository.updateAccount(contaExistente);
   }
 
-  transfer(
+  async transfer(
     id: string,
     payer: string,
     receiver: string,
     amount: number,
-  ): [Account, Account] {
+  ): Promise<[Account, Account]> {
     if (payer === receiver) {
       throw new Error('conta pagadora e recebedora n podem ser iguais');
     }
-    const contaPagadora: Account = this.repository.findAccountValid(payer);
+    if (amount < 1) {
+      throw new Error(
+        `valor da transferencia precisa ser positivo. amount:${amount}, payer:${payer}, receiver:${receiver}`,
+      );
+    }
+    const contaPagadora: Account = await this.repository.findAccountValid(
+      payer,
+    );
 
-    const contaRecebedora: Account = this.repository.findAccountValid(receiver);
+    const contaRecebedora: Account = await this.repository.findAccountValid(
+      receiver,
+    );
 
     if (contaPagadora.balance - amount < 0) {
       throw new Error(`saldo insuficiente para transferir. document=${payer}`);
     }
+
+    contaPagadora.balance -= amount;
+    contaRecebedora.balance += amount;
 
     const transferencia = new AccountTransaction(
       id,
@@ -70,19 +117,26 @@ class AccountManagerImpl implements AccountManager {
       payer,
       receiver,
     );
-    contaPagadora.doTransaction(-amount, transferencia);
-    const contaPagadoraSalva = this.repository.updateAccount(contaPagadora);
-    contaRecebedora.doTransaction(amount, transferencia);
-    const contaRecebedoraSalva = this.repository.updateAccount(contaRecebedora);
+
+    await this.repository.createAccountTransaction(transferencia);
+    const contaPagadoraSalva = await this.repository.updateAccount(
+      contaPagadora,
+    );
+    const contaRecebedoraSalva = await this.repository.updateAccount(
+      contaRecebedora,
+    );
     return [contaPagadoraSalva, contaRecebedoraSalva];
   }
 
-  getExtract(document: string): AccountTransaction[] {
-    const contaExistente: Account = this.repository.findAccountValid(document);
-    return contaExistente.extract;
+  async getExtract(document: string): Promise<AccountTransaction[]> {
+    const result = await this.repository.findAccountTransactions(document);
+    return result;
   }
-  getBalance(document: string): number {
-    const contaExistente: Account = this.repository.findAccountValid(document);
+
+  async getBalance(document: string): Promise<number> {
+    const contaExistente: Account = await this.repository.findAccountValid(
+      document,
+    );
 
     return contaExistente.balance;
   }
