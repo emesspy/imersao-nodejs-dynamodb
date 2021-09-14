@@ -185,24 +185,22 @@ class AccountRepositoryImpl implements AccountRepository {
     const pk = `${tenant}#${ACCOUNT_ENTITY_NAME}#${document}`;
     const sk = `${ACCOUNT_TRANSACTION_ENTITY_NAME}#`;
     const results = await this.getByPartitionKeyAndQuerySortKey(pk, sk);
-    if (results) {
-      const transactions = results
-        .filter(item => {
-          return item.amount && item.type;
-        })
-        .map(transaction => {
-          return new AccountTransaction(
-            tenant,
-            transaction.sk.split(`${ACCOUNT_TRANSACTION_ENTITY_NAME}#`)[1],
-            transaction.amount!,
-            transaction.type! as TransactionType,
-            transaction.payer,
-            transaction.receiver,
-          );
-        });
-      return transactions;
-    }
-    return [];
+
+    const transactions = results
+      .filter(item => {
+        return item.amount && item.type;
+      })
+      .map(transaction => {
+        return new AccountTransaction(
+          tenant,
+          transaction.sk.split(`${ACCOUNT_TRANSACTION_ENTITY_NAME}#`)[1],
+          transaction.amount!,
+          transaction.type! as TransactionType,
+          transaction.payer,
+          transaction.receiver,
+        );
+      });
+    return transactions;
   }
 
   private createTransactionInputItem(
