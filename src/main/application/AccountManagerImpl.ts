@@ -85,7 +85,7 @@ class AccountManagerImpl implements AccountManager {
 
     if (contaExistente.balance - amount < 0) {
       throw new Error(
-        `saldo insuficiente para saque. tenant=${tenant} , document=${document} , amount:${amount}`,
+        `saldo insuficiente para saque. tenant=${tenant} , document=${document} , amount=${amount}`,
       );
     }
     contaExistente.balance -= amount;
@@ -126,7 +126,7 @@ class AccountManagerImpl implements AccountManager {
 
     if (contaPagadora.balance - amount < 0) {
       throw new Error(
-        `saldo insuficiente para transferir. tenant=${tenant} , document=${payer}`,
+        `saldo insuficiente para transferir. tenant=${contaPagadora.tenant} , document=${contaPagadora.document} , balance=${contaPagadora.balance}`,
       );
     }
 
